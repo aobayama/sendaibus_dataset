@@ -30,6 +30,7 @@ def parse_sheet(sheet, stations):
                 continue
             else:
                 start_index = row
+                id_value = int(id_value)
                 if (not id_value in stations):
                     stations[id_value] = {"name": str_value, "buses": []}
         else:
@@ -37,6 +38,7 @@ def parse_sheet(sheet, stations):
                 break
             else:
                 end_index = row
+                id_value = int(id_value)
                 if (not id_value in stations):
                     stations[id_value] = {"name": str_value, "buses": []}
 
@@ -50,7 +52,7 @@ def parse_sheet(sheet, stations):
             print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), sheet.name)
 
             for row in range(start_index, end_index):
-                staid_value = sheet.cell(row, 1).value
+                staid_value = int(sheet.cell(row, 1).value)
                 time_value = sheet.cell(row, col).value
 
                 if (time_value == u"∥"):
@@ -80,6 +82,8 @@ def parse_book(filename):
 
     for index in range(book.nsheets):
         (res_type, stations, res_buses) = parse_sheet(book.sheet_by_index(index), stations)
+        buses.update(res_buses)
+
         if (res_type in types):
             print "Invalid data."
         else:
