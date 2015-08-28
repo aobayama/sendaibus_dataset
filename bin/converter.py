@@ -7,18 +7,14 @@ import collections
 import uuid
 import json
 
-def parse_bus(col,sheet):
-    pass
-
-def parse_sheet(sheet, stations):
+def parse_sheet(sheet, stations, buses, routes):
     print "## Sheet: %s" % sheet.name
-
-    stations = {}
-    buses = collections.defaultdict(list)
 
     # まずはStationsリストを作成
     start_index = -1
     end_index = -1
+
+    route_stations = []
 
     # 駅データを取得
     for row in range(sheet.nrows):
@@ -31,25 +27,46 @@ def parse_sheet(sheet, stations):
             else:
                 start_index = row
                 id_value = int(id_value)
+                route_stations.append(id_value)
                 if (not id_value in stations):
                     stations[id_value] = {"name": str_value, "buses": []}
+                elif (stations[id_value]["name"] != str_value):
+                    print "Invalid data!"
+                    sys.exit(-1)
         else:
             if (str_value == ""):
                 break
             else:
                 end_index = row
                 id_value = int(id_value)
+                route_stations.append(id_value)
                 if (not id_value in stations):
                     stations[id_value] = {"name": str_value, "buses": []}
+                elif (stations[id_value]["name"] != str_value):
+                    print "Invalid data!"
+                    sys.exit(-1)
 
     print " -> %d stations has been detected.[%d, %d]" % (len(stations.keys()), start_index, end_index)
 
+    # バス停/系統を検証
+    if (not sheet.name in routes):
+        # 新規作成
+        routes[sheet.name] = {"buses": [], "stations": route_stations}
+    else:
+        # 検証
+        pass
+
+
     # バスに着目
+    count = 0
     for col in range(sheet.ncols):
         col_header = sheet.cell(1, col).value
         if (type(col_header) == float):
+            count += 1
             bus_id = str(uuid.uuid1())
             print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), sheet.name)
+
+            routes[sheet.name]["buses"].append({"bus_id": bus_id})
 
             for row in range(start_index, end_index):
                 staid_value = int(sheet.cell(row, 1).value)
@@ -66,30 +83,22 @@ def parse_sheet(sheet, stations):
                     stations[staid_value]["buses"].append({"bus_id": bus_id, "dept": time_value})
                     buses[bus_id].append({"station_id": staid_value, "dept": time_value})
 
-    print " -> %d bus info has been parsed." % len(buses.keys())
+    print " -> %d bus info has been parsed." % count
 
-    return (sheet.name, stations, buses)
 
-def parse_book(filename):
+    return (stations, buses, routes)
+
+def parse_book(filename, stations, buses, routes):
     print "# Parsing : %s" % filename
     book = xlrd.open_workbook(filename)
     # Output book info
     print " * There are %d sheets in this book." % book.nsheets
 
-    stations = {}
-    buses = {}
-    types = {}
-
     for index in range(book.nsheets):
-        (res_type, stations, res_buses) = parse_sheet(book.sheet_by_index(index), stations)
-        buses.update(res_buses)
+        (stations, buses, routes) = parse_sheet(book.sheet_by_index(index), stations, buses, routes)
 
-        if (res_type in types):
-            print "Invalid data."
-        else:
-            types[res_type] = [x for x in res_buses.keys()]
-
-    return {"stations": stations, "buses": buses, "types": types}
+    return (stations, buses, routes)
+    # return {"stations": stations, "buses": buses, "types": types}
 
 if __name__ == "__main__":
     args = sys.argv
@@ -100,8 +109,13 @@ if __name__ == "__main__":
     input_path = args[1]
     output_path = args[2]
 
-    result = parse_book(input_path)
+    stations = {}
+    buses = collections.defaultdict(list)
+    routes = {}
+
+    (stations, buses, routes)= parse_book(input_path, stations, buses, routes)
+    data = {"stations": stations, "buses": buses, "routes": routes}
     f = open(output_path, "w")
-    f.write(json.dumps(result))
+    f.write(json.dumps(data))
     f.close()
 
