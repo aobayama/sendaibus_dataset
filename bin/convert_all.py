@@ -7,6 +7,14 @@ import collections
 import uuid
 import json
 
+def parse_line(line_str):
+    parsed = line_str.split("_")
+    if len(parsed) == 2:
+        return (parsed[0], parsed[1])
+    else:
+        print "Invalid Line Expression."
+        sys.exit(-1)
+
 def parse_sheet(sheet, stations, buses, lines, daytype):
     print "## Sheet: %s" % sheet.name
 
@@ -48,10 +56,12 @@ def parse_sheet(sheet, stations, buses, lines, daytype):
 
     print " -> %d stations has been detected.[%d, %d]" % (len(stations.keys()), start_index, end_index)
 
+    (line_id, line_name) = parse_line(sheet.name)
+
     # バス停/系統を検証
-    if (not sheet.name in lines):
+    if (not line_id in lines):
         # 新規作成
-        lines[sheet.name] = {"buses": [], "stations": line_stations}
+        lines[line_id] = {"name": line_name, "buses": [], "stations": line_stations}
     else:
         # 検証
         pass
@@ -64,7 +74,7 @@ def parse_sheet(sheet, stations, buses, lines, daytype):
         if (type(col_header) == float):
             count += 1
             bus_id = str(uuid.uuid1())
-            print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), sheet.name)
+            print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), line_id)
 
             if not bus_id in buses:
                 buses[bus_id] = {"dept_times": [], "daytype": daytype}
@@ -72,7 +82,7 @@ def parse_sheet(sheet, stations, buses, lines, daytype):
                 print "Duplicate BusId!"
                 sys.exit(-1)
 
-            lines[sheet.name]["buses"].append({"bus_id": bus_id, "daytype": daytype})
+            lines[line_id]["buses"].append({"bus_id": bus_id, "daytype": daytype})
 
             for row in range(start_index, end_index):
                 staid_value = int(sheet.cell(row, 1).value)
