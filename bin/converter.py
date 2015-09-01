@@ -7,14 +7,14 @@ import collections
 import uuid
 import json
 
-def parse_sheet(sheet, stations, buses, routes):
+def parse_sheet(sheet, stations, buses, lines):
     print "## Sheet: %s" % sheet.name
 
     # まずはStationsリストを作成
     start_index = -1
     end_index = -1
 
-    route_stations = []
+    line_stations = []
 
     # 駅データを取得
     for row in range(sheet.nrows):
@@ -27,7 +27,7 @@ def parse_sheet(sheet, stations, buses, routes):
             else:
                 start_index = row
                 id_value = int(id_value)
-                route_stations.append(id_value)
+                line_stations.append(id_value)
                 if (not id_value in stations):
                     stations[id_value] = {"name": str_value, "buses": []}
                 elif (stations[id_value]["name"] != str_value):
@@ -39,7 +39,7 @@ def parse_sheet(sheet, stations, buses, routes):
             else:
                 end_index = row
                 id_value = int(id_value)
-                route_stations.append(id_value)
+                line_stations.append(id_value)
                 if (not id_value in stations):
                     stations[id_value] = {"name": str_value, "buses": []}
                 elif (stations[id_value]["name"] != str_value):
@@ -49,9 +49,9 @@ def parse_sheet(sheet, stations, buses, routes):
     print " -> %d stations has been detected.[%d, %d]" % (len(stations.keys()), start_index, end_index)
 
     # バス停/系統を検証
-    if (not sheet.name in routes):
+    if (not sheet.name in lines):
         # 新規作成
-        routes[sheet.name] = {"buses": [], "stations": route_stations}
+        lines[sheet.name] = {"buses": [], "stations": line_stations}
     else:
         # 検証
         pass
@@ -66,7 +66,13 @@ def parse_sheet(sheet, stations, buses, routes):
             bus_id = str(uuid.uuid1())
             print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), sheet.name)
 
-            routes[sheet.name]["buses"].append({"bus_id": bus_id})
+            if not bus_id in buses:
+                buses[bus_id] = {"dept_times": []}
+            else:
+                print "Duplicate BusId!"
+                sys.exit(-1)
+
+            lines[sheet.name]["buses"].append({"bus_id": bus_id})
 
             for row in range(start_index, end_index):
                 staid_value = int(sheet.cell(row, 1).value)
@@ -81,23 +87,23 @@ def parse_sheet(sheet, stations, buses, routes):
                 else:
                     # 時刻
                     stations[staid_value]["buses"].append({"bus_id": bus_id, "dept": time_value})
-                    buses[bus_id].append({"station_id": staid_value, "dept": time_value})
+                    buses[bus_id]["dept_times"].append({"station_id": staid_value, "dept": time_value})
 
     print " -> %d bus info has been parsed." % count
 
 
-    return (stations, buses, routes)
+    return (stations, buses, lines)
 
-def parse_book(filename, stations, buses, routes):
+def parse_book(filename, stations, buses, lines):
     print "# Parsing : %s" % filename
     book = xlrd.open_workbook(filename)
     # Output book info
     print " * There are %d sheets in this book." % book.nsheets
 
     for index in range(book.nsheets):
-        (stations, buses, routes) = parse_sheet(book.sheet_by_index(index), stations, buses, routes)
+        (stations, buses, lines) = parse_sheet(book.sheet_by_index(index), stations, buses, lines)
 
-    return (stations, buses, routes)
+    return (stations, buses, lines)
     # return {"stations": stations, "buses": buses, "types": types}
 
 if __name__ == "__main__":
@@ -110,11 +116,11 @@ if __name__ == "__main__":
     output_path = args[2]
 
     stations = {}
-    buses = collections.defaultdict(list)
-    routes = {}
+    buses = {}
+    lines = {}
 
-    (stations, buses, routes)= parse_book(input_path, stations, buses, routes)
-    data = {"stations": stations, "buses": buses, "routes": routes}
+    (stations, buses, lines) = parse_book(input_path, stations, buses, lines)
+    data = {"stations": stations, "buses": buses, "lines": lines}
     f = open(output_path, "w")
     f.write(json.dumps(data))
     f.close()
