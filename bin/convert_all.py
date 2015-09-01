@@ -77,7 +77,7 @@ def parse_sheet(sheet, stations, buses, lines, daytype):
             print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), line_id)
 
             if not bus_id in buses:
-                buses[bus_id] = {"dept_times": [], "daytype": daytype}
+                buses[bus_id] = {"line_id": line_id, "dept_times": [], "daytype": daytype}
             else:
                 print "Duplicate BusId!"
                 sys.exit(-1)
