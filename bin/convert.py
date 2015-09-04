@@ -10,7 +10,7 @@ import json
 def parse_line(line_str):
     parsed = line_str.split("_")
     if len(parsed) == 2:
-        return (parsed[0], parsed[1])
+        return (int(parsed[0]), parsed[1])
     else:
         print "Invalid Line Expression."
         sys.exit(-1)
@@ -89,7 +89,7 @@ def parse_sheet(sheet, stations, buses, lines):
                 print "Duplicate BusId!"
                 sys.exit(-1)
 
-            lines[line_key]["buses"].append({"bus_id": bus_id})
+            lines[line_key]["buses"].append(bus_id)
 
             for row in range(start_index, end_index):
                 staid_value = int(sheet.cell(row, 1).value)
