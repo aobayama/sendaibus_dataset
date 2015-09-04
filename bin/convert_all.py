@@ -57,15 +57,25 @@ def parse_sheet(sheet, stations, buses, lines, daytype):
     print " -> %d stations has been detected.[%d, %d]" % (len(stations.keys()), start_index, end_index)
 
     (line_id, line_name) = parse_line(sheet.name)
+    line_key = sheet.name
+
+    if (not daytype in lines):
+        lines[daytype] = {}
 
     # バス停/系統を検証
-    if (not line_id in lines):
+    if (not line_key in lines[daytype]):
         # 新規作成
-        lines[line_id] = {"name": line_name, "buses": [], "stations": line_stations}
+        lines[daytype][line_key] = {"name": line_name, "id": line_id, "buses": [], "stations": line_stations}
     else:
         # 検証
-        pass
+        if (len(lines[daytype][line_key]["stations"]) != len(line_stations)):
+            print "Invalid data.(Station count of line)"
+            sys.exit(-1)
 
+        for i in range(len(lines[daytype][line_key]["stations"])):
+            if (lines[daytype][line_key]["stations"][i] != line_stations[i]):
+                print "Invalid data. (Station order/data)"
+                sys.exit(-1)
 
     # バスに着目
     count = 0
@@ -74,15 +84,15 @@ def parse_sheet(sheet, stations, buses, lines, daytype):
         if (type(col_header) == float):
             count += 1
             bus_id = str(uuid.uuid1())
-            print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), line_id)
+            print " * Reading: (Id: %s) Bus #%s in %s" % (bus_id, int(col_header), line_key)
 
             if not bus_id in buses:
-                buses[bus_id] = {"line_id": line_id, "dept_times": [], "daytype": daytype}
+                buses[bus_id] = {"line_key": line_key, "dept_times": [], "daytype": daytype}
             else:
                 print "Duplicate BusId!"
                 sys.exit(-1)
 
-            lines[line_id]["buses"].append({"bus_id": bus_id, "daytype": daytype})
+            lines[daytype][line_key]["buses"].append({"bus_id": bus_id})
 
             for row in range(start_index, end_index):
                 staid_value = int(sheet.cell(row, 1).value)
