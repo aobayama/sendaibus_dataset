@@ -8,17 +8,7 @@ import collections
 import uuid
 import json
 
-def parse_line(line_str):
-    parsed = line_str.split("_")
-    if len(parsed) == 2:
-        return (int(parsed[0]), parsed[1])
-    else:
-        print "Invalid Line Expression."
-        sys.exit(-1)
-
 def parse_sheet(sheet, lines, daytype):
-
-    (line_id, line_name) = parse_line(sheet.name)
     line_key = sheet.name
 
     if (not daytype in lines):
