@@ -1,10 +1,8 @@
 #!/bin/bash
 
-python bin/convert.py original/冊子型.xls json/bus_weekday.json
-python bin/convert.py original/冊子型土曜.xls json/bus_saturday.json
-python bin/convert.py original/冊子型休日.xls json/bus_holiday.json
+python bin/make_misc_ids.py original/冊子型.xls original/冊子型土曜.xls original/冊子型休日.xls json/bus_misc_data.json
 
-python bin/convert_all.py original/冊子型.xls original/冊子型土曜.xls original/冊子型休日.xls json/bus_all.json
+python bin/convert_all.py json/bus_misc_data.json original/冊子型.xls original/冊子型土曜.xls original/冊子型休日.xls json/bus_all.json
 
 echo "Finished."
 
