@@ -1,6 +1,11 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 
+# This code merges coords.json and yomigana.csv. it generates merged-busstop database
+#
+# If you want a readable json, execute below:
+# $ cat coords_yomigana.json | ruby -r json -e 'jj(JSON.parse!(STDIN.read))''
+
 require 'json'
 require 'csv'
 
