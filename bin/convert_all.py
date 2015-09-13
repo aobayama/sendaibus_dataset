@@ -15,7 +15,7 @@ def parse_line(line_str):
         print "Invalid Line Expression."
         sys.exit(-1)
 
-def parse_sheet(sheet, line_dict, stations, buses, lines, daytype):
+def parse_sheet(sheet, misc_data, stations, buses, lines, daytype):
     print "## Sheet: %s" % sheet.name
 
     # まずはStationsリストを作成
@@ -37,7 +37,8 @@ def parse_sheet(sheet, line_dict, stations, buses, lines, daytype):
                 id_value = "b_%s" % (int(id_value))
                 line_stations.append(id_value)
                 if (not id_value in stations):
-                    stations[id_value] = {"name": str_value, "buses": []}
+                    coord_info = misc_data["coords"][id_value]["coordinates"]
+                    stations[id_value] = {"name": str_value, "buses": [], "coord": coord_info}
                 elif (stations[id_value]["name"] != str_value):
                     print "Invalid data!"
                     sys.exit(-1)
@@ -49,7 +50,8 @@ def parse_sheet(sheet, line_dict, stations, buses, lines, daytype):
                 id_value = "b_%s" % int(id_value)
                 line_stations.append(id_value)
                 if (not id_value in stations):
-                    stations[id_value] = {"name": str_value, "buses": []}
+                    coord_info = misc_data["coords"][id_value]["coordinates"]
+                    stations[id_value] = {"name": str_value, "buses": [], "coord": coord_info}
                 elif (stations[id_value]["name"] != str_value):
                     print "Invalid data!"
                     sys.exit(-1)
@@ -57,7 +59,7 @@ def parse_sheet(sheet, line_dict, stations, buses, lines, daytype):
     print " -> %d stations has been detected.[%d, %d]" % (len(stations.keys()), start_index, end_index)
 
     (line_number, line_name) = parse_line(sheet.name)
-    line_id = line_dict["lines"][daytype][sheet.name]
+    line_id = misc_data["lines"][daytype][sheet.name]
 
     if (not daytype in lines):
         lines[daytype] = {}
@@ -113,14 +115,14 @@ def parse_sheet(sheet, line_dict, stations, buses, lines, daytype):
 
     return (stations, buses, lines)
 
-def parse_book(filename, line_dict, stations, buses, lines, daytype):
+def parse_book(filename, misc_data, stations, buses, lines, daytype):
     print "# Parsing : %s" % filename
     book = xlrd.open_workbook(filename)
     # Output book info
     print " * There are %d sheets in this book." % book.nsheets
 
     for index in range(book.nsheets):
-        (stations, buses, lines) = parse_sheet(book.sheet_by_index(index), line_dict, stations, buses, lines, daytype)
+        (stations, buses, lines) = parse_sheet(book.sheet_by_index(index), misc_data, stations, buses, lines, daytype)
 
     return (stations, buses, lines)
     # return {"stations": stations, "buses": buses, "types": types}
@@ -131,24 +133,24 @@ if __name__ == "__main__":
         sys.stderr.write("Usage: python %s [Input Misc Data(*.json)] [Input *Weekday* file(*.xls)] [Input *Saturday* file(*.xls)] [Input *Holiday* file(*.xls) ][Output file(*.json)]\n" % args[0])
         sys.exit(-1)
 
-    line_dict_path = args[1]
+    misc_data_path = args[1]
     input_weekday_path = args[2]
     input_satureday_path = args[3]
     input_holiday_path = args[4]
     output_path = args[5]
 
-    line_dict = {}
+    misc_data = {}
     stations = {}
     buses = {}
     lines = {}
 
-    lf = open(line_dict_path, "r")
-    line_dict = json.load(lf)
+    lf = open(misc_data_path, "r")
+    misc_data = json.load(lf)
     lf.close()
 
-    (stations, buses, lines) = parse_book(input_weekday_path, line_dict, stations, buses, lines, "weekday")
-    (stations, buses, lines) = parse_book(input_satureday_path, line_dict, stations, buses, lines, "saturday")
-    (stations, buses, lines) = parse_book(input_holiday_path, line_dict, stations, buses, lines, "holiday")
+    (stations, buses, lines) = parse_book(input_weekday_path, misc_data, stations, buses, lines, "weekday")
+    (stations, buses, lines) = parse_book(input_satureday_path, misc_data, stations, buses, lines, "saturday")
+    (stations, buses, lines) = parse_book(input_holiday_path, misc_data, stations, buses, lines, "holiday")
     data = {"stations": stations, "buses": buses, "lines": lines}
     f = open(output_path, "w")
     f.write(json.dumps(data))

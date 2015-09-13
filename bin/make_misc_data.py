@@ -37,16 +37,20 @@ def parse_book(filename, lines, daytype):
 
 if __name__ == "__main__":
     args = sys.argv
-    if (len(args) != 5):
-        sys.stderr.write("Usage: python %s [Input *Weekday* file(*.xls)] [Input *Saturday* file(*.xls)] [Input *Holiday* file(*.xls) ][In/Out Misc id file(*.json)]\n" % args[0])
+    if (len(args) != 6):
+        sys.stderr.write("Usage: python %s [Input *Weekday* file(*.xls)] [Input *Saturday* file(*.xls)] [Input *Holiday* file(*.xls)] [Input Coords file(*.json)] [In/Out Misc id file(*.json)]\n" % args[0])
         sys.exit(-1)
 
     input_weekday_path = args[1]
     input_satureday_path = args[2]
     input_holiday_path = args[3]
-    in_out_path = args[4]
+    coords_path = args[4]
+    in_out_path = args[5]
 
     lines = {}
+    cf = open(coords_path, "r")
+    coords = json.load(cf)
+    cf.close()
 
     if (os.path.exists(in_out_path)):
         lf = open(in_out_path, "r")
@@ -58,7 +62,7 @@ if __name__ == "__main__":
     lines = parse_book(input_satureday_path, lines, "saturday")
     lines = parse_book(input_holiday_path, lines, "holiday")
 
-    data = {"lines": lines}
+    data = {"lines": lines, "coords": coords}
 
     f = open(in_out_path, "w")
     f.write(json.dumps(data))
