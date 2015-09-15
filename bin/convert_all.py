@@ -37,8 +37,8 @@ def parse_sheet(sheet, misc_data, stations, buses, lines, daytype):
                 id_value = "b_%s" % (int(id_value))
                 line_stations.append(id_value)
                 if (not id_value in stations):
-                    coord_info = misc_data["coords"][id_value]["coordinates"]
-                    stations[id_value] = {"name": str_value, "buses": [], "coord": coord_info}
+                    station_info = misc_data["station_misc"][id_value]
+                    stations[id_value] = {"name": str_value, "buses": [], "coord": station_info["coordinates"], "yomi": station_info["yomi"]}
                 elif (stations[id_value]["name"] != str_value):
                     print "Invalid data!"
                     sys.exit(-1)
@@ -50,8 +50,8 @@ def parse_sheet(sheet, misc_data, stations, buses, lines, daytype):
                 id_value = "b_%s" % int(id_value)
                 line_stations.append(id_value)
                 if (not id_value in stations):
-                    coord_info = misc_data["coords"][id_value]["coordinates"]
-                    stations[id_value] = {"name": str_value, "buses": [], "coord": coord_info}
+                    station_info = misc_data["station_misc"][id_value]
+                    stations[id_value] = {"name": str_value, "buses": [], "coord": station_info["coordinates"], "yomi": station_info["yomi"]}
                 elif (stations[id_value]["name"] != str_value):
                     print "Invalid data!"
                     sys.exit(-1)
