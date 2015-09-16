@@ -96,7 +96,7 @@ def parse_sheet(sheet, misc_data, stations, buses, lines, daytype):
 
             lines[daytype][line_id]["buses"].append(bus_id)
 
-            for row in range(start_index, end_index):
+            for row in range(start_index, end_index + 1):
                 staid_value = "b_%s" % int(sheet.cell(row, 1).value)
                 time_value = sheet.cell(row, col).value
 
